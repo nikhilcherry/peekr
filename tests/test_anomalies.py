@@ -106,6 +106,13 @@ def test_high_cardinality_positive():
     assert "HIGH_CARDINALITY" in detect_anomalies("x", arr)
 
 
+def test_high_cardinality_negative_2d():
+    # A 2-D image trivially has all-unique float values; it's not an ID column.
+    rng = np.random.default_rng(0)
+    arr = rng.normal(size=(100, 100))
+    assert "HIGH_CARDINALITY" not in detect_anomalies("x", arr)
+
+
 def test_high_cardinality_negative():
     arr = np.array([1, 1, 2, 2, 3, 3] * 400)
     assert "HIGH_CARDINALITY" not in detect_anomalies("x", arr)

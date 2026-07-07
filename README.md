@@ -36,15 +36,20 @@ $ peekr experiment.npz
 ```
 
 ```
-experiment.npz  (npz, 84213 bytes, 3 items)
-┌────────┬─────────┬───────────┬─────────┬─────────┬─────────┬──────┬─────────┐
-│ name   │ dtype   │ shape     │     min │  median │     max │ %nan │ flags   │
-├────────┼─────────┼───────────┼─────────┼─────────┼─────────┼──────┼─────────┤
-│ good   │ float64 │ (1000,)   │  -3.482 │ -0.0224 │   3.291 │  0.0 │         │
-│ bad    │ float64 │ (50,)     │     nan │     nan │     nan │100.0 │ ALL_NAN │
-│ ids    │ int64   │ (1000,)   │     0.0 │   499.5 │   999.0 │  0.0 │         │
-└────────┴─────────┴───────────┴─────────┴─────────┴─────────┴──────┴─────────┘
+/tmp/demo/experiment.npz  (npz, 17,138 bytes, 3 items)
+┌──────┬─────────┬─────────┬────────┬──────────┬───────┬───────┬─────────────────────────────┐
+│ name │ dtype   │ shape   │    min │   median │   max │  %nan │ flags                       │
+├──────┼─────────┼─────────┼────────┼──────────┼───────┼───────┼─────────────────────────────┤
+│ good │ float64 │ (1000,) │ -3.648 │ 0.006178 │ 3.179 │   0.0 │                             │
+│ bad  │ float64 │ (50,)   │      - │        - │     - │ 100.0 │ HAS_NAN ALL_NAN MOSTLY_NULL │
+│ ids  │ int64   │ (1000,) │      0 │    499.5 │   999 │   0.0 │ MONOTONIC                   │
+└──────┴─────────┴─────────┴────────┴──────────┴───────┴───────┴─────────────────────────────┘
 ```
+
+(`ids` is flagged `MONOTONIC` — informational, doesn't affect exit code. `bad`
+is flagged for real: all-NaN, mostly-null. Piped/non-TTY output widens
+automatically and folds long flag lists instead of clipping them — see
+`--wide` below.)
 
 ### Machine-readable output for CI
 
@@ -54,9 +59,9 @@ $ peekr experiment.npz --json | python -m json.tool
 
 ```json
 {
-  "path": "/data/experiment.npz",
+  "path": "/tmp/demo/experiment.npz",
   "format": "npz",
-  "size_bytes": 84213,
+  "size_bytes": 17138,
   "n_items": 3,
   "summaries": [
     {
@@ -72,7 +77,7 @@ $ peekr experiment.npz --json | python -m json.tool
       "median": null,
       "std": null,
       "n_unique": 1,
-      "flags": ["ALL_NAN"]
+      "flags": ["HAS_NAN", "ALL_NAN", "MOSTLY_NULL"]
     }
   ],
   "metadata": { "allow_pickle": false },
@@ -80,11 +85,15 @@ $ peekr experiment.npz --json | python -m json.tool
 }
 ```
 
-`peekr` exits non-zero when data-quality flags are found, so it drops
-straight into a CI pipeline as a data-quality gate:
+### Use it as a CI data-quality gate
+
+`peekr` exits `1` the moment it finds a real data-quality flag (`0` if the
+file is clean, `2` if it couldn't even be read) — no extra flags or plumbing
+needed, just check the exit code:
 
 ```bash
-peekr data/*.parquet || exit 1
+# fail the build if any parquet output has NaNs, constant columns, etc.
+peekr data/*.parquet || { echo "data quality check failed"; exit 1; }
 ```
 
 ### Scan a whole directory
@@ -94,22 +103,38 @@ $ peekr ./data -r
 ```
 
 ```
-                 peekr directory summary
-┌───────────────────────┬─────────┬────────┬───────┬───────┐
-│ path                   │ format  │   size │ items │ flags │
-├───────────────────────┼─────────┼────────┼───────┼───────┤
-│ ./data/run1.npz        │ npz     │  84213 │     3 │     1 │
-│ ./data/run2.csv        │ csv     │  12044 │     5 │     0 │
-│ ./data/calib.fits      │ fits    │ 921600 │     2 │     0 │
-└───────────────────────┴─────────┴────────┴───────┴───────┘
+                    peekr directory summary
+┌───────────────────────────┬────────┬────────┬───────┬───────┐
+│ path                      │ format │   size │ items │ flags │
+├───────────────────────────┼────────┼────────┼───────┼───────┤
+│ ./data/calib.fits         │ fits   │ 20,160 │     1 │     0 │
+│ ./data/run1.npz           │ npz    │  4,740 │     2 │     3 │
+│ ./data/run2.csv           │ csv    │ 13,074 │     3 │     1 │
+└───────────────────────────┴────────┴────────┴───────┴───────┘
 
-./data/run1.npz  (npz, 84213 bytes, 3 items)
-┌──────┬─────────┬─────────┬──────┬─────────┬──────┬──────┬─────────┐
-│ name │ dtype   │ shape   │  min │  median │  max │ %nan │ flags   │
-├──────┼─────────┼─────────┼──────┼─────────┼──────┼──────┼─────────┤
-│ bad  │ float64 │ (50,)   │  nan │     nan │  nan │100.0 │ ALL_NAN │
-└──────┴─────────┴─────────┴──────┴─────────┴──────┴──────┴─────────┘
+./data/run1.npz  (npz, 4,740 bytes, 2 items)
+┌──────┬─────────┬────────┬────────┬──────────┬───────┬───────┬─────────────────────────────┐
+│ name │ dtype   │ shape  │    min │   median │   max │  %nan │ flags                       │
+├──────┼─────────┼────────┼────────┼──────────┼───────┼───────┼─────────────────────────────┤
+│ good │ float64 │ (500,) │ -2.956 │ 0.003051 │ 2.809 │   0.0 │                             │
+│ bad  │ float64 │ (30,)  │      - │        - │     - │ 100.0 │ HAS_NAN ALL_NAN MOSTLY_NULL │
+└──────┴─────────┴────────┴────────┴──────────┴───────┴───────┴─────────────────────────────┘
+
+./data/run2.csv  (csv, 13,074 bytes, 3 items)
+┌─────────────┬─────────┬────────┬───────┬────────┬───────┬──────┬──────────────┐
+│ name        │ dtype   │ shape  │   min │ median │   max │ %nan │ flags        │
+├─────────────┼─────────┼────────┼───────┼────────┼───────┼──────┼──────────────┤
+│ sensor_id   │ object  │ (300,) │     - │      - │     - │  0.0 │ OBJECT_DTYPE │
+│ temperature │ float64 │ (300,) │  14.5 │  19.71 │ 25.83 │  0.0 │              │
+│ pressure    │ float64 │ (300,) │ 997.8 │   1013 │  1027 │  0.0 │              │
+└─────────────┴─────────┴────────┴───────┴────────┴───────┴──────┴──────────────┘
 ```
+
+Only flagged files get expanded in the detail view — `calib.fits` is clean
+here, so it's summarized in the top table but not printed again below. Long
+paths/names/flag lists get wider room automatically when stdout isn't a
+terminal (e.g. piped to a file or CI log); pass `--wide` to widen further, or
+when you're piping and still want minimal truncation.
 
 ### Quick-look plots
 
@@ -131,7 +156,7 @@ peekr experiment.npz --plot
 | `MONOTONIC` | strictly increasing/decreasing numeric 1-D array (informational — likely a time/index axis) |
 | `EMPTY` | zero elements |
 | `OBJECT_DTYPE` | dtype is object (pickled data smell in npz) |
-| `HIGH_CARDINALITY` | tabular column where n_unique == n_total > 1000 (likely an ID column, informational) |
+| `HIGH_CARDINALITY` | 1-D column where n_unique == n_total > 1000 (likely an ID column, informational — not raised for 2-D+ data like images, where all-unique values are normal) |
 | `MOSTLY_NULL` | >50% NaN/null |
 
 `MONOTONIC` and `HIGH_CARDINALITY` are informational and do not affect the
@@ -159,6 +184,7 @@ options:
   --recursive, -r   recurse into subdirectories
   --max-rows N      cap rows read from tabular files
   --no-anomalies    skip anomaly detection
+  --wide            wider table layout; reduces name/flag truncation, useful when piping
   --version
 ```
 

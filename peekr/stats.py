@@ -13,6 +13,16 @@ if TYPE_CHECKING:
 _UNIQUE_CAP = 1_000_000
 
 
+def _display_dtype(dtype: np.dtype) -> str:
+    """Human-readable dtype name. Numeric/bool/complex dtypes drop byte-order
+    markers (">f8" -> "float64") since FITS big-endian data reads oddly to
+    non-astronomers otherwise. String/object dtypes keep str(dtype) as-is,
+    since dtype.name mangles those (e.g. "<U10" -> "str320")."""
+    if np.issubdtype(dtype, np.number) or dtype == np.bool_:
+        return dtype.name
+    return str(dtype)
+
+
 def summarize(name: str, arr: "np.ndarray", *, deep: bool = False) -> "ArraySummary":
     """Compute an ArraySummary for one array/column. NaN-aware, no RuntimeWarnings."""
     from .core import ArraySummary  # local import avoids circular dependency at module load
@@ -59,7 +69,7 @@ def summarize(name: str, arr: "np.ndarray", *, deep: bool = False) -> "ArraySumm
 
     return ArraySummary(
         name=name,
-        dtype=str(arr.dtype),
+        dtype=_display_dtype(arr.dtype),
         shape=tuple(arr.shape),
         n_total=n_total,
         n_nan=n_nan,

@@ -57,6 +57,22 @@ def test_summarize_deep_unique_large_array():
     assert s_deep.n_unique == 5
 
 
+def test_summarize_normalizes_byte_order():
+    arr = np.array([1.0, 2.0, 3.0], dtype=">f8")
+    s = summarize("x", arr)
+    assert s.dtype == "float64"
+
+    arr_int = np.array([1, 2, 3], dtype=">i4")
+    s_int = summarize("x", arr_int)
+    assert s_int.dtype == "int32"
+
+
+def test_summarize_string_dtype_unchanged():
+    arr = np.array(["a", "bb", "ccc"], dtype="<U10")
+    s = summarize("x", arr)
+    assert s.dtype == "<U10"
+
+
 def test_summarize_empty_array():
     arr = np.array([], dtype=np.float64)
     s = summarize("x", arr)

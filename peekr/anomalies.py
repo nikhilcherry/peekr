@@ -102,7 +102,9 @@ def detect_anomalies(name: str, arr: "np.ndarray") -> list[str]:
         if diffs.size > 0 and (bool(np.all(diffs > 0)) or bool(np.all(diffs < 0))):
             flags.append("MONOTONIC")
 
-    if _HIGH_CARDINALITY_MIN < n_total <= _UNIQUE_CAP:
+    # Only meaningful for 1-D columns (e.g. an ID column); a 2-D image trivially
+    # has all-unique float values and isn't an "ID" in any useful sense.
+    if arr.ndim == 1 and _HIGH_CARDINALITY_MIN < n_total <= _UNIQUE_CAP:
         try:
             n_unique = int(np.unique(flat).size)
             if n_unique == n_total:

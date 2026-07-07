@@ -18,8 +18,16 @@ _DATA_QUALITY_STYLE = "red"
 _INFO_STYLE = "dim"
 
 
-def make_console() -> Console:
-    return Console(file=sys.stdout)
+def make_console(*, wide: bool = False) -> Console:
+    """Build the output console. When stdout isn't a TTY, rich falls back to
+    an 80-column width by default, which truncates names/flags aggressively.
+    Widen that fallback so piped output (files, CI logs) stays readable."""
+    width = None
+    if not sys.stdout.isatty():
+        width = 200 if wide else 120
+    elif wide:
+        width = 200
+    return Console(file=sys.stdout, width=width)
 
 
 def _flag_text(flags: list[str]) -> str:
@@ -62,14 +70,14 @@ def render_file_report(report: FileReport, console: Console | None = None) -> No
         return
 
     table = Table(box=use_box, show_lines=False)
-    table.add_column("name")
+    table.add_column("name", overflow="fold")
     table.add_column("dtype")
     table.add_column("shape")
     table.add_column("min", justify="right")
     table.add_column("median", justify="right")
     table.add_column("max", justify="right")
     table.add_column("%nan", justify="right")
-    table.add_column("flags")
+    table.add_column("flags", overflow="fold")
 
     for s in report.summaries:
         pct_nan = f"{(s.n_nan / s.n_total * 100):.1f}" if s.n_total else "-"
@@ -92,7 +100,7 @@ def render_dir_summary(reports: list[FileReport], console: Console | None = None
     use_box = box.SQUARE if console.is_terminal else None
 
     table = Table(box=use_box, show_lines=False, title="peekr directory summary")
-    table.add_column("path")
+    table.add_column("path", overflow="fold")
     table.add_column("format")
     table.add_column("size", justify="right")
     table.add_column("items", justify="right")

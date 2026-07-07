@@ -36,6 +36,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--max-rows", type=int, default=None, metavar="N", help="Cap rows read from tabular files"
     )
     parser.add_argument("--no-anomalies", action="store_true", help="Skip anomaly detection")
+    parser.add_argument(
+        "--wide",
+        action="store_true",
+        help="Use a wider table layout; reduces name/flag truncation, useful when piping output",
+    )
     parser.add_argument("--version", action="version", version=f"peekr {__version__}")
     return parser
 
@@ -77,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
-    console = make_console()
+    console = make_console(wide=args.wide)
     from rich.console import Console
 
     err_console = Console(file=sys.stderr)
