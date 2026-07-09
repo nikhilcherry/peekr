@@ -24,7 +24,9 @@ def read(path: Path, *, deep: bool = False, max_rows: int | None = None) -> File
     try:
         import pandas as pd
     except ImportError:
-        raise PeekrReadError("CSV support requires: pip install peekr[csv]") from None
+        raise PeekrReadError(
+            'CSV support requires: pip install "peekr[csv] @ git+https://github.com/nikhilcherry/peekr"'
+        ) from None
 
     errors: list[str] = []
     encoding = "utf-8"

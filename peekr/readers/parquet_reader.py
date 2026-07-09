@@ -12,7 +12,9 @@ def read(path: Path, *, deep: bool = False, max_rows: int | None = None) -> File
         import pyarrow as pa
         import pyarrow.parquet as pq
     except ImportError:
-        raise PeekrReadError("Parquet support requires: pip install peekr[parquet]") from None
+        raise PeekrReadError(
+            'Parquet support requires: pip install "peekr[parquet] @ git+https://github.com/nikhilcherry/peekr"'
+        ) from None
 
     errors: list[str] = []
     metadata: dict = {}

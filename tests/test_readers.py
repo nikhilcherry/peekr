@@ -89,5 +89,5 @@ def test_fits_missing_dependency_message(monkeypatch, tmp_path):
     fake_fits = tmp_path / "fake.fits"
     fake_fits.write_bytes(b"not a real fits file")
 
-    with pytest.raises(PeekrReadError, match=r"FITS support requires: pip install peekr\[fits\]"):
+    with pytest.raises(PeekrReadError, match=r"FITS support requires: pip install"):
         peek(fake_fits)

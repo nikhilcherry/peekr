@@ -133,7 +133,9 @@ def generate_plot(report: FileReport, *, plot_dir: str | Path | None = None) -> 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except ImportError:
-        raise PeekrReadError("Plotting requires: pip install peekr[plot]") from None
+        raise PeekrReadError(
+            'Plotting requires: pip install "peekr[plot] @ git+https://github.com/nikhilcherry/peekr"'
+        ) from None
 
     arrays = _load_named_arrays(report)
     numeric = [s for s in report.summaries if s.min is not None and s.name in arrays]

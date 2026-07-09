@@ -13,7 +13,9 @@ def read(path: Path, *, deep: bool = False, max_rows: int | None = None) -> File
     try:
         from astropy.io import fits
     except ImportError:
-        raise PeekrReadError("FITS support requires: pip install peekr[fits]") from None
+        raise PeekrReadError(
+            'FITS support requires: pip install "peekr[fits] @ git+https://github.com/nikhilcherry/peekr"'
+        ) from None
 
     errors: list[str] = []
     summaries: list[ArraySummary] = []

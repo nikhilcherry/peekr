@@ -26,7 +26,9 @@ def read(path: Path, *, deep: bool = False, max_rows: int | None = None) -> File
     try:
         import h5py
     except ImportError:
-        raise PeekrReadError("HDF5 support requires: pip install peekr[h5]") from None
+        raise PeekrReadError(
+            'HDF5 support requires: pip install "peekr[h5] @ git+https://github.com/nikhilcherry/peekr"'
+        ) from None
 
     errors: list[str] = []
     summaries: list[ArraySummary] = []
