@@ -2,7 +2,7 @@
 
 A universal scientific data file explorer for the command line.
 
-Point `peekr` at any `.npz`, `.fits`, `.csv`, `.parquet`, or `.h5` file (or a
+Point `peekr` at any `.npy`, `.npz`, `.fits`, `.csv`, `.parquet`, or `.h5` file (or a
 directory of them) and it instantly shows you what's inside: structure,
 stats, quick plots, and automatic anomaly flags (NaNs, constant columns,
 outliers, suspicious dtypes) — `ls` + `head` + `describe()` + "is this file

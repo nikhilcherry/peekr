@@ -9,6 +9,22 @@ import pytest
 from peekr.core import PeekrReadError, peek
 
 
+def test_npy_reader(clean_npy):
+    report = peek(clean_npy)
+    assert report.format == "npy"
+    assert report.n_items == 1
+    summary = report.summaries[0]
+    assert summary.shape == (200,)
+    assert summary.dtype == "float64"
+    assert summary.name == "clean"
+
+
+def test_npy_reader_pickled_objects(dirty_npy):
+    report = peek(dirty_npy)
+    assert report.metadata["allow_pickle"] is True
+    assert "OBJECT_DTYPE" in report.summaries[0].flags
+
+
 def test_npz_reader(clean_npz):
     report = peek(clean_npz)
     assert report.format == "npz"

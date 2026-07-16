@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Callable
 
 from ..core import FileReport, UnsupportedFormatError
-from . import csv_reader, fits_reader, h5_reader, npz_reader, parquet_reader
+from . import csv_reader, fits_reader, h5_reader, npy_reader, npz_reader, parquet_reader
 
 READERS: dict[str, Callable[..., FileReport]] = {
+    ".npy": npy_reader.read,
     ".npz": npz_reader.read,
     ".fits": fits_reader.read,
     ".fit": fits_reader.read,

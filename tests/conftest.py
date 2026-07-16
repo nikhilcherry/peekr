@@ -19,6 +19,22 @@ def clean_npz(tmp_path):
 
 
 @pytest.fixture
+def clean_npy(tmp_path):
+    path = tmp_path / "clean.npy"
+    rng = np.random.default_rng(7)
+    np.save(path, rng.normal(size=200).astype(np.float64))
+    return path
+
+
+@pytest.fixture
+def dirty_npy(tmp_path):
+    path = tmp_path / "dirty.npy"
+    obj_arr = np.array([{"a": 1}, [1, 2, 3], "text"], dtype=object)
+    np.save(path, obj_arr, allow_pickle=True)
+    return path
+
+
+@pytest.fixture
 def dirty_npz(tmp_path):
     path = tmp_path / "dirty.npz"
     rng = np.random.default_rng(1)
