@@ -10,6 +10,19 @@ sane?" in one command, without opening a notebook.
 
 ![peekr inspecting a single npz file](assets/single-file.svg)
 
+`peekr` isn't tied to any one stage of a pipeline — it's the tool you point
+at *any* intermediate file (a `fetchr`-synced `.npz`, a `foldr` output, an
+`injectr` fixture, a `batchr` cache object) when something looks off, or as
+an automated sanity gate between stages:
+
+```mermaid
+flowchart LR
+    A["any pipeline stage's output\n(fetchr / foldr / fitr / injectr / batchr)"] --> P["peekr\n(structure, stats, anomaly flags)"]:::here
+    P -->|"exit 0"| OK["looks sane -- proceed"]
+    P -->|"exit 1"| BAD["data-quality flag found -- fail CI / investigate"]
+    classDef here fill:#2563eb,color:#fff,stroke:none;
+```
+
 ## Install
 
 ```bash
