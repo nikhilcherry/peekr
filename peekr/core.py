@@ -43,9 +43,10 @@ class FileReport:
 
 def peek(path: str | Path, *, deep: bool = False, max_rows: int | None = None) -> FileReport:
     """Inspect a single file. deep=True computes expensive stats
-    (percentiles, unique counts on large arrays). max_rows caps how
-    much of a tabular file is read (default: full file for < 100 MB,
-    first 1M rows otherwise)."""
+    (percentiles, unique counts on large arrays). max_rows caps how many
+    rows are read from a tabular file (csv/parquet); default None reads
+    the full file. There is no automatic size-based cap -- pass max_rows
+    explicitly for very large files."""
     from .readers import get_reader
 
     p = Path(path).expanduser().resolve()
