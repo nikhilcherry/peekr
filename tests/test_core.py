@@ -24,6 +24,20 @@ def test_peek_resolves_path(clean_npz):
     assert report.path == str(clean_npz)
 
 
+def test_peek_rejects_negative_max_rows(clean_npz):
+    # A negative max_rows would otherwise reach a reader's own
+    # df.iloc[:max_rows]-style slicing, which silently does Python's
+    # negative-slice-from-the-end (drops the last N rows) instead of
+    # raising or being a no-op -- a confidently wrong result, not an error.
+    with pytest.raises(PeekrReadError, match="max_rows must be >= 0"):
+        peek(clean_npz, max_rows=-5)
+
+
+def test_peek_dir_rejects_negative_max_rows(tmp_path, clean_npz):
+    with pytest.raises(PeekrReadError, match="max_rows must be >= 0"):
+        peek_dir(tmp_path, max_rows=-1)
+
+
 def test_peek_dir_finds_supported_files(tmp_path, clean_npz):
     (tmp_path / "ignore.txt").write_text("nope")
     reports = peek_dir(tmp_path)
