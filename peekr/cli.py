@@ -91,7 +91,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if target.is_dir():
-            reports = peek_dir(target, recursive=args.recursive)
+            reports = peek_dir(
+                target, recursive=args.recursive, deep=args.deep, max_rows=args.max_rows
+            )
             for r in reports:
                 _postprocess(r, args)
                 _maybe_plot(r, args, err_console)

@@ -57,3 +57,13 @@ def test_peek_dir_pattern(tmp_path, clean_npz):
     reports = peek_dir(tmp_path, pattern="*.npz")
     assert len(reports) == 1
     assert reports[0].format == "npz"
+
+
+def test_peek_dir_forwards_max_rows(tmp_path, table_csv):
+    # table_csv has 200 rows; peek_dir must forward max_rows to peek()
+    # for every file, not silently ignore it (it previously did).
+    full = peek_dir(tmp_path, pattern="*.csv")
+    assert full[0].summaries[0].n_total == 200
+
+    capped = peek_dir(tmp_path, pattern="*.csv", max_rows=10)
+    assert capped[0].summaries[0].n_total == 10

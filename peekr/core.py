@@ -64,7 +64,10 @@ def peek(path: str | Path, *, deep: bool = False, max_rows: int | None = None) -
         raise PeekrReadError(f"Failed to read {p.name}: {exc}") from exc
 
 
-def peek_dir(path: str | Path, *, pattern: str = "*", recursive: bool = False) -> list[FileReport]:
+def peek_dir(
+    path: str | Path, *, pattern: str = "*", recursive: bool = False,
+    deep: bool = False, max_rows: int | None = None,
+) -> list[FileReport]:
     """Inspect every supported file in a directory."""
     from .readers import READERS
 
@@ -80,7 +83,7 @@ def peek_dir(path: str | Path, *, pattern: str = "*", recursive: bool = False) -
         if candidate.suffix.lower() not in READERS:
             continue
         try:
-            reports.append(peek(candidate))
+            reports.append(peek(candidate, deep=deep, max_rows=max_rows))
         except PeekrReadError as exc:
             reports.append(
                 FileReport(
