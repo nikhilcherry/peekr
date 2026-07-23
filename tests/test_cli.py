@@ -71,6 +71,23 @@ def test_cli_key_filter(clean_npz, tmp_path):
     assert [s["name"] for s in data["summaries"]] == ["a"]
 
 
+def test_cli_key_filter_typo_warns_instead_of_silent_empty_report(clean_npz, tmp_path):
+    # A --key that matches nothing (a likely typo, e.g. "flux" vs "flx")
+    # previously produced a silently "clean" 0-item report at exit 0,
+    # indistinguishable from a genuinely empty file.
+    result = _run([str(clean_npz), "--key", "nonexistent_column"], cwd=tmp_path)
+    assert result.returncode == 0
+    assert "matched nothing" in result.stderr
+    assert "nonexistent_column" in result.stderr
+    assert "a" in result.stderr and "b" in result.stderr and "c" in result.stderr
+
+
+def test_cli_key_filter_valid_key_has_no_warning(clean_npz, tmp_path):
+    result = _run([str(clean_npz), "--key", "a"], cwd=tmp_path)
+    assert result.returncode == 0
+    assert "matched nothing" not in result.stderr
+
+
 def test_cli_no_anomalies(dirty_npz, tmp_path):
     result = _run([str(dirty_npz), "--no-anomalies", "--json"], cwd=tmp_path)
     assert result.returncode == 0, result.stderr

@@ -45,11 +45,22 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _apply_key_filter(report: FileReport, keys: list[str] | None) -> None:
+def _apply_key_filter(report: FileReport, keys: list[str] | None, err_console) -> None:
     if not keys:
         return
     key_set = set(keys)
-    report.summaries = [s for s in report.summaries if s.name in key_set]
+    matched = [s for s in report.summaries if s.name in key_set]
+    unmatched = key_set - {s.name for s in matched}
+    if unmatched and report.summaries:
+        # A --key that matches nothing (a likely typo) previously produced
+        # a silently "clean" 0-item report at exit 0, indistinguishable
+        # from a genuinely empty file -- surface it instead.
+        available = ", ".join(sorted(s.name for s in report.summaries))
+        err_console.print(
+            f"[yellow]! --key {sorted(unmatched)} matched nothing in {report.path} "
+            f"(available: {available})[/yellow]"
+        )
+    report.summaries = matched
     report.n_items = len(report.summaries)
 
 
@@ -58,8 +69,8 @@ def _apply_no_anomalies(report: FileReport) -> None:
         s.flags = []
 
 
-def _postprocess(report: FileReport, args: argparse.Namespace) -> None:
-    _apply_key_filter(report, args.key)
+def _postprocess(report: FileReport, args: argparse.Namespace, err_console) -> None:
+    _apply_key_filter(report, args.key, err_console)
     if args.no_anomalies:
         _apply_no_anomalies(report)
 
@@ -95,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
                 target, recursive=args.recursive, deep=args.deep, max_rows=args.max_rows
             )
             for r in reports:
-                _postprocess(r, args)
+                _postprocess(r, args, err_console)
                 _maybe_plot(r, args, err_console)
 
             if args.json:
@@ -107,7 +118,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1 if total_flags > 0 else 0
 
         report = peek(target, deep=args.deep, max_rows=args.max_rows)
-        _postprocess(report, args)
+        _postprocess(report, args, err_console)
         _maybe_plot(report, args, err_console)
 
         if args.json:
