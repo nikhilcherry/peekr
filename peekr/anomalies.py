@@ -7,7 +7,16 @@ from __future__ import annotations
 import numpy as np
 
 _UNIQUE_CAP = 1_000_000
-_MAD_OUTLIER_MULT = 10
+# Modified z-score threshold (Iglewicz & Hoaglin 1993): flag a point when
+# |x - median| / (MAD_TO_SIGMA * MAD) exceeds this. MAD_TO_SIGMA (1/Phi^-1(3/4))
+# rescales MAD to a standard-deviation-equivalent for normally distributed
+# data, so 4.5 here means "~4.5 sigma", comfortably away from Gaussian noise
+# false-positiving on realistic column sizes -- comparing raw distance to a
+# bare multiple of MAD without this scale factor (the previous
+# `dist > 10 * mad`) is actually an ~7.4-sigma threshold, too conservative
+# to flag realistic contamination.
+_MAD_TO_SIGMA = 1.4826
+_MODIFIED_ZSCORE_THRESHOLD = 4.5
 _OUTLIER_MIN_SIZE = 20
 _OUTLIER_FRACTION = 0.001
 _HIGH_CARDINALITY_MIN = 1000
@@ -92,7 +101,8 @@ def detect_anomalies(name: str, arr: "np.ndarray") -> list[str]:
         mad = float(np.median(np.abs(valid - median)))
         if mad > 0:
             dist = np.abs(valid - median)
-            n_outliers = int(np.count_nonzero(dist > _MAD_OUTLIER_MULT * mad))
+            modified_z = dist / (_MAD_TO_SIGMA * mad)
+            n_outliers = int(np.count_nonzero(modified_z > _MODIFIED_ZSCORE_THRESHOLD))
             if n_outliers / valid.size > _OUTLIER_FRACTION:
                 flags.append("OUTLIERS")
 

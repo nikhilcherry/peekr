@@ -70,6 +70,17 @@ def test_outliers_negative():
     assert "OUTLIERS" not in detect_anomalies("x", arr)
 
 
+def test_outliers_moderate_contamination_detected():
+    """A realistic ~6-sigma contamination (not the 1e6 catastrophic spike
+    above) must still be caught -- the modified z-score threshold (~4.5
+    sigma-equivalent) is what makes this the interesting case; a bare
+    dist > 10*MAD comparison (~7.4 sigma-equivalent) would miss it."""
+    rng = np.random.default_rng(0)
+    arr = rng.normal(size=1000)
+    arr[:5] = 6.0
+    assert "OUTLIERS" in detect_anomalies("x", arr)
+
+
 def test_monotonic_positive():
     arr = np.arange(100, dtype=np.float64)
     assert "MONOTONIC" in detect_anomalies("x", arr)

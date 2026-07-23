@@ -1,5 +1,11 @@
 # peekr
 
+<p align="center">
+  <img alt="python" src="https://img.shields.io/badge/python-3.10%2B-blue">
+  <img alt="formats" src="https://img.shields.io/badge/formats-npz_%7C_fits_%7C_csv_%7C_parquet_%7C_h5-orange">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-green">
+</p>
+
 A universal scientific data file explorer for the command line.
 
 Point `peekr` at any `.npy`, `.npz`, `.fits`, `.csv`, `.parquet`, or `.h5` file (or a
@@ -161,7 +167,7 @@ per array/column, skipping ones that are all-NaN or empty:
 | `ALL_NAN` | every value NaN |
 | `CONSTANT` | ≥2 elements, all identical |
 | `NEAR_CONSTANT` | std < 1e-12 × abs(mean), non-zero mean |
-| `OUTLIERS` | >0.1% of values beyond 10× MAD from median |
+| `OUTLIERS` | >0.1% of values with a modified z-score (`\|x - median\| / (1.4826 * MAD)`) beyond 4.5 |
 | `MONOTONIC` | strictly increasing/decreasing numeric 1-D array (informational — likely a time/index axis) |
 | `EMPTY` | zero elements |
 | `OBJECT_DTYPE` | dtype is object (pickled data smell in npz) |
