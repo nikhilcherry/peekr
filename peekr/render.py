@@ -125,9 +125,16 @@ def _sanitize(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_sanitize(v) for v in value]
     if isinstance(value, np.generic):
-        return value.item()
+        value = value.item()
     if isinstance(value, np.ndarray):
         return _sanitize(value.tolist())
+    if isinstance(value, float) and not np.isfinite(value):
+        # json.dumps emits bare NaN/Infinity/-Infinity tokens for these,
+        # which is not valid JSON per RFC 8259 -- Python's own json.loads
+        # tolerates it, but --json output exists for other tools to
+        # consume, and a stat like min/max/mean CAN legitimately be inf
+        # or nan for a HAS_INF-flagged array. Emit null instead.
+        return None
     return value
 
 
@@ -137,4 +144,4 @@ def to_json(reports: list[FileReport] | FileReport) -> str:
         data: Any = dataclasses.asdict(reports)
     else:
         data = [dataclasses.asdict(r) for r in reports]
-    return json.dumps(_sanitize(data), indent=2)
+    return json.dumps(_sanitize(data), indent=2, allow_nan=False)
